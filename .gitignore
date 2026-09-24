@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Deployment Documentation ###
+DEPLOYMENT.md
+DEPLOYMENT_CHECKLIST.md
+GITHUB_ACTIONS_SETUP.md
+GITHUB_ACTIONS_USAGE.md
+
+deploy/*.md
