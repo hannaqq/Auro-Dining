@@ -54,7 +54,7 @@ flowchart TB
     App -- "Read & Write (ORM)" --> PostgreSQL
     App -- "Trigger Auth Emails" --> SES
     
-    Github -- "Automated Build & Deploy" -.-> Docker
+    Github -. "Automated Build & Deploy" .-> Docker
 ```
 
 ---
