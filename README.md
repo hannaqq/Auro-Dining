@@ -77,29 +77,25 @@ To handle peak dining hours and ensure system resilience, the caching layer impl
 ```mermaid
 flowchart TD
     %% Read Flow (Customer)
-    Client([Customer Queries Menu]) --> Controller[Dish & Combo Controllers<br/>@Cacheable]
-    Controller --> CacheAOP{Spring Cache AOP}
-    
-    CacheAOP -- "Try Cache" --> RedisStatus{Redis Healthy?}
+    Client([Customer Queries Menu]) --> Controller[Dish/Combo Controllers<br/>@Cacheable]
+    Controller -- "Query Cache" --> RedisStatus{Redis Healthy?}
     
     %% Normal Flow
-    RedisStatus -- "Yes (Alive)" --> CacheHit{Cache Hit?}
-    CacheHit -- "Hit" --> JacksonDes[Jackson Deserialization]
-    JacksonDes --> Return([Return JSON Fast])
+    RedisStatus -- "Yes" --> CacheHit{Cache Hit?}
+    CacheHit -- "Hit" --> Return([Return Data Fast])
     
     CacheHit -- "Miss" --> DBQuery[Query PostgreSQL]
-    DBQuery --> JacksonSer[Jackson Serialization + 1hr TTL]
-    JacksonSer --> SaveRedis[Save to Redis]
+    DBQuery --> SaveRedis[Save to Redis (TTL: 1hr)]
     SaveRedis --> Return
     
     %% Fallback Flow (Graceful Degradation)
-    RedisStatus -- "No (Timeout/Down)" --> ErrorHandler[Custom CacheErrorHandler]
-    ErrorHandler -- "Mute Exception (Pretend Miss)" -.-> DBQuery
+    RedisStatus -- "No (Down/Timeout)" --> ErrorHandler[CacheErrorHandler]
+    ErrorHandler -.->|"Mute Exception (Fallback)"| DBQuery
     
     %% Cache Consistency (Admin)
-    Admin([Admin Updates Dish/Combo]) --> AdminController[Dish & Combo Controllers<br/>@CacheEvict]
+    Admin([Admin Updates Dish/Combo]) --> AdminController[Admin Controllers<br/>@CacheEvict]
     AdminController --> UpdateDB[Update PostgreSQL]
-    UpdateDB -- "Cache Aside" --> DeleteCache[Evict Redis Cache]
+    UpdateDB -- "Cache-Aside" --> DeleteCache[Evict Redis Key]
     
     %% Styling
     classDef fallback fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828;
@@ -111,54 +107,33 @@ flowchart TD
 
 
 ### 🔐 Under the Hood: Stateless Auth & Memory Safety
-To support distributed deployments and strict memory management, the authentication flow uses a **Zero-Frontend-Modification JWT strategy** combined with isolated `ThreadLocal` context management.
+To support distributed deployments and strict memory management, the authentication flow uses a **Cookie-based JWT Authentication strategy** combined with isolated `ThreadLocal` context management.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Client as Client (Browser)
-    participant Filter as LoginCheckFilter
-    participant Ctrl as UserController
+    actor Client
+    participant App as Spring Boot Backend
     participant Redis as Redis Cache
     participant SES as AWS SES
-    participant TL as AuthContext (ThreadLocal)
-    participant Service as Business Services
 
-    %% Phase 1: OTP Request
-    rect rgb(245, 247, 250)
-        Note over Client, SES: Phase 1: OTP Generation & Delivery
-        Client->>Ctrl: POST /user/sendMsg (Email)
-        Ctrl->>SES: Send 6-digit OTP
-        Ctrl->>Redis: SET email:OTP (TTL: 5 mins)
-        Ctrl-->>Client: 200 OK (OTP Sent)
-    end
+    %% Phase 1: OTP Generation
+    Client->>App: POST /user/sendMsg (Email)
+    App->>SES: Trigger 6-digit OTP Email
+    App->>Redis: SET email:OTP (TTL: 5 mins)
+    App-->>Client: 200 OK
+    
+    %% Phase 2: Login & JWT Issuance
+    Client->>App: POST /user/login (Email, OTP)
+    App->>Redis: GET & Validate OTP
+    App->>Redis: DEL email:OTP (Prevent Replay)
+    Note over App: Sign JWT (HS512)
+    App-->>Client: 200 OK (Set-Cookie: Auth-Token=JWT)
 
-    %% Phase 2: Login & JWT
-    rect rgb(240, 248, 255)
-        Note over Client, Redis: Phase 2: Stateless Login (Zero-Frontend-Mod)
-        Client->>Ctrl: POST /user/login (Email, OTP)
-        Ctrl->>Redis: GET email:OTP & Validate
-        Ctrl->>Redis: DEL email:OTP (Prevent Replay Attack)
-        Note over Ctrl: Sign JWT (HS512)
-        Ctrl-->>Client: 200 OK (Set-Cookie: Auth-Token=JWT)
-    end
-
-    %% Phase 3: Authenticated Request
-    rect rgb(253, 245, 230)
-        Note over Client, Service: Phase 3: Auth Context & Memory Leak Prevention
-        Client->>Filter: Request Business API (Cookie: Auth-Token)
-        Filter->>Filter: Parse & Verify JWT
-        Filter->>TL: setCurrentId(userId)
-        
-        Filter->>Service: doFilter() (Proceed to Controller/Service)
-        Service->>TL: getCurrentId()
-        TL-->>Service: Return userId
-        Service-->>Filter: Return Business Response
-        
-        Note right of Filter: finally block execution
-        Filter->>TL: removeCurrentId() (Prevent Memory Leak)
-        Filter-->>Client: 200 OK Response
-    end
+    %% Phase 3: Authenticated Access
+    Client->>App: Request Business API (Cookie: Auth-Token)
+    Note over App: 1. Filter Parses JWT<br/>2. Set ThreadLocal Context<br/>3. Execute Business Logic<br/>4. finally: Clear ThreadLocal
+    App-->>Client: 200 OK Response
 ```
 
 ---
