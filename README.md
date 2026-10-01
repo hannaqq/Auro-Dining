@@ -77,25 +77,25 @@ To handle peak dining hours and ensure system resilience, the caching layer impl
 ```mermaid
 flowchart TD
     %% Read Flow (Customer)
-    Client([Customer Queries Menu]) --> Controller[Dish/Combo Controllers<br/>@Cacheable]
-    Controller -- "Query Cache" --> RedisStatus{Redis Healthy?}
+    Client(["Customer Queries Menu"]) --> Controller["Dish/Combo Controllers<br/>@Cacheable"]
+    Controller -- "Query Cache" --> RedisStatus{"Redis Healthy?"}
     
     %% Normal Flow
-    RedisStatus -- "Yes" --> CacheHit{Cache Hit?}
-    CacheHit -- "Hit" --> Return([Return Data Fast])
+    RedisStatus -- "Yes" --> CacheHit{"Cache Hit?"}
+    CacheHit -- "Hit" --> Return(["Return Data Fast"])
     
-    CacheHit -- "Miss" --> DBQuery[Query PostgreSQL]
-    DBQuery --> SaveRedis[Save to Redis (TTL: 1hr)]
+    CacheHit -- "Miss" --> DBQuery["Query PostgreSQL"]
+    DBQuery --> SaveRedis["Save to Redis (TTL: 1hr)"]
     SaveRedis --> Return
     
     %% Fallback Flow (Graceful Degradation)
-    RedisStatus -- "No (Down/Timeout)" --> ErrorHandler[CacheErrorHandler]
+    RedisStatus -- "No (Down/Timeout)" --> ErrorHandler["CacheErrorHandler"]
     ErrorHandler -.->|"Mute Exception (Fallback)"| DBQuery
     
     %% Cache Consistency (Admin)
-    Admin([Admin Updates Dish/Combo]) --> AdminController[Admin Controllers<br/>@CacheEvict]
-    AdminController --> UpdateDB[Update PostgreSQL]
-    UpdateDB -- "Cache-Aside" --> DeleteCache[Evict Redis Key]
+    Admin(["Admin Updates Dish/Combo"]) --> AdminController["Admin Controllers<br/>@CacheEvict"]
+    AdminController --> UpdateDB["Update PostgreSQL"]
+    UpdateDB -- "Cache-Aside" --> DeleteCache["Evict Redis Key"]
     
     %% Styling
     classDef fallback fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828;
