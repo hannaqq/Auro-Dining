@@ -1,4 +1,4 @@
-﻿# 馃嵔锔?Auro-Dining Restaurant Management System
+# 🍽️ Auro-Dining Restaurant Management System
 
 ![Java](https://img.shields.io/badge/Java-17-orange.svg)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen.svg)
@@ -11,7 +11,7 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## 馃洜锔?Tech Stack & Architecture
+## 🛠️ Tech Stack & Architecture
 
 *   **Backend Framework**: Java 17, Spring Boot 3.2, Spring Data JPA
 *   **Database & Caching**: PostgreSQL, Redis (Configured with custom Jackson serialization and cache penetration defense)
@@ -21,15 +21,15 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## 鉁?Core Features
+## 🌟 Core Features
 
-### 馃懁 Customer Portal
+### 👤 Customer Portal
 *   **Dynamic Email Authentication**: Secure login via AWS SES dynamic verification codes.
 *   **High-Performance Menu Browsing**: Millisecond-level menu and category loading powered by Redis caching.
 *   **Smart Shopping Cart**: Real-time cart state management with complex pricing aggregations.
 *   **Order Management**: Seamless order placement and historical order tracking.
 
-### 馃懆鈥嶐煃?Admin Dashboard
+### 👨‍🍳 Admin Dashboard
 *   **Employee Management**: Role-based access control and staff onboarding.
 *   **Product Lifecycle**: Comprehensive management of dishes, flavors (SKUs), and nested combo meals (Setmeals).
 *   **Automated Auditing**: All administrative actions are automatically tracked (Who & When) using Spring Data JPA Auditing.
@@ -37,7 +37,7 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## 馃彈锔?System Architecture
+## 🏗️ System Architecture
 
 ```mermaid
 flowchart TB
@@ -56,7 +56,7 @@ flowchart TB
         end
         
         SES["📧 AWS SES<br/>(Email Service)"]
-        PostgreSQL["🐘 PostgreSQL<br/>(ACID Transactions)"]
+        PostgreSQL["🐘 Amazon RDS<br/>(PostgreSQL)"]
     end
 
     Github["🐙 GitHub Actions<br/>(CI/CD Pipeline)"]
@@ -71,7 +71,7 @@ flowchart TB
     Github -. "Automated Deploy" .-> Docker
 ```
 
-### 馃攷 Under the Hood: High-Availability Cache Workflow
+### 🔎 Under the Hood: High-Availability Cache Workflow
 To handle peak dining hours and ensure system resilience, the caching layer implements the **Cache-Aside Pattern** with a custom **Graceful Degradation (Fallback)** mechanism.
 
 ```mermaid
@@ -110,7 +110,7 @@ flowchart TD
 
 
 
-### 馃攼 Under the Hood: Stateless Auth & Memory Safety
+### 🔐 Under the Hood: Stateless Auth & Memory Safety
 To support distributed deployments and strict memory management, the authentication flow uses a **Zero-Frontend-Modification JWT strategy** combined with isolated `ThreadLocal` context management.
 
 ```mermaid
@@ -163,7 +163,7 @@ sequenceDiagram
 
 ---
 
-## 馃殌 Quick Start (Local Development)
+## 🚀 Quick Start (Local Development)
 
 ### Prerequisites
 *   [Java 17+](https://adoptium.net/)
@@ -190,7 +190,7 @@ The API will be available at `http://localhost:80`.
 
 ---
 
-## 鈽侊笍 Cloud Deployment (CI/CD)
+## ☁️ Cloud Deployment (CI/CD)
 
 This project features a fully automated **CI/CD Pipeline** leveraging GitHub Actions and AWS infrastructure:
 1. Push code to the `main` branch.
@@ -200,5 +200,6 @@ This project features a fully automated **CI/CD Pipeline** leveraging GitHub Act
 5. Spring Boot Actuator performs automated HTTP health checks (`/actuator/health`) to verify container readiness during deployment.
 
 ---
-*Developed with 鉂わ笍 and modern Java engineering practices.*
+*Developed with ❤️ and modern Java engineering practices.*
+
 
