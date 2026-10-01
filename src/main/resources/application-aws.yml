@@ -14,23 +14,25 @@ spring:
     hibernate:
       ddl-auto: update
       naming:
-        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
     show-sql: false
     properties:
       hibernate:
         format_sql: false
         globally_quoted_identifiers: true
-  redis:
-    host: localhost
-    port: 6379
-    database: 0
-    timeout: 3000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
+  data:
+    data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
   cache:
     redis:
       time-to-live: 1800000ms
@@ -50,5 +52,7 @@ logging:
     com.qiao: INFO
   file:
     name: /home/ec2-user/auro-dining/logs/application.log
-    max-size: 10MB
-    max-history: 7
+  logback:
+    rollingpolicy:
+      max-file-size: 10MB
+      max-history: 7

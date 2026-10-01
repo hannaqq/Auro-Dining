@@ -11,6 +11,9 @@ import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import jakarta.servlet.http.Cookie;
+import io.jsonwebtoken.Claims;
+import com.aurodining.common.AppJwtUtil;
 
 /**
  * Filter to check login status and manage ThreadLocal context
@@ -75,14 +78,14 @@ public class LoginCheckFilter implements Filter {
             }
 
             // Check Mobile User login via JWT Cookie (Stateless Auth Strategy)
-            jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+            Cookie[] cookies = request.getCookies();
             if (cookies != null) {
-                for (jakarta.servlet.http.Cookie cookie : cookies) {
+                for (Cookie cookie : cookies) {
                     if ("Auth-Token".equals(cookie.getName())) {
                         String token = cookie.getValue();
                         try {
-                            io.jsonwebtoken.Claims claims = com.aurodining.common.AppJwtUtil.getClaimsBody(token);
-                            if (claims != null && com.aurodining.common.AppJwtUtil.verifyToken(claims) == 0) {
+                            Claims claims = AppJwtUtil.getClaimsBody(token);
+                            if (claims != null && AppJwtUtil.verifyToken(claims) == 0) {
                                 // Extract user ID safely, accounting for JSON deserialization to Integer/Long
                                 Long userId = ((Number) claims.get("id")).longValue();
                                 AuthContext.setCurrentId(userId);

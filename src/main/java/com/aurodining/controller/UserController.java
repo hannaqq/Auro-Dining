@@ -20,6 +20,9 @@ import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
+import com.aurodining.common.AppJwtUtil;
 
 /**
  * Controller for User Frontend - User Authentication
@@ -90,7 +93,7 @@ public class UserController {
      * Mobile User Login via email
      */
     @PostMapping("/login")
-    public R<User> login(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, @RequestBody Map map){
+    public R<User> login(HttpServletRequest request, HttpServletResponse response, @RequestBody Map map){
         Object emailObj = map.get("email");
         Object codeObj = map.get("code");
 
@@ -126,9 +129,9 @@ public class UserController {
                 userService.save(user);
             }
 
-            // 4. Generate JWT and store in Cookie (Stateless Auth Strategy)
-            String token = com.aurodining.common.AppJwtUtil.getToken(user.getId());
-            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("Auth-Token", token);
+            // 4. Generate JWT and store in Cookie
+            String token = AppJwtUtil.getToken(user.getId());
+            Cookie cookie = new Cookie("Auth-Token", token);
             cookie.setPath("/");
             cookie.setMaxAge(86400); // 24 hours
             response.addCookie(cookie);
@@ -150,9 +153,9 @@ public class UserController {
      * Mobile User Logout
      */
     @PostMapping("/loginout")
-    public R<String> loginout(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
+    public R<String> loginout(HttpServletRequest request, HttpServletResponse response) {
         // 1. Clear JWT Cookie
-        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("Auth-Token", null);
+        Cookie cookie = new Cookie("Auth-Token", null);
         cookie.setPath("/");
         cookie.setMaxAge(0);
         response.addCookie(cookie);

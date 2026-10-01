@@ -16,17 +16,19 @@ spring:
       hibernate:
         format_sql: true
         globally_quoted_identifiers: true
-  redis:
-    host: localhost
-    port: 6379
-    database: 0
-    timeout: 3000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
+  data:
+    data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 0
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
   cache:
     redis:
       time-to-live: 1800000ms
