@@ -1,5 +1,6 @@
 package com.aurodining.controller;
 
+import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
 import com.aurodining.entity.AddressBook;
 import com.aurodining.service.AddressBookService;
@@ -28,7 +29,7 @@ public class AddressBookController {
     @GetMapping("/list")
     public R<List<AddressBook>> getList(HttpServletRequest request, AddressBook addressBook){
         // Get current user ID from Session
-        Long userId = (Long) request.getSession().getAttribute("user");
+        Long userId = AuthContext.getCurrentId();
         addressBook.setUserId(userId);
 
         List<AddressBook> list = addressBookService.list(addressBook);
@@ -41,7 +42,7 @@ public class AddressBookController {
     @PostMapping
         public R<String> save(HttpServletRequest request, @RequestBody AddressBook addressBook){
         // Set User ID
-        Long userId = (Long) request.getSession().getAttribute("user");
+        Long userId = AuthContext.getCurrentId();
         addressBook.setUserId(userId);
 
         addressBookService.save(addressBook);
@@ -84,7 +85,7 @@ public class AddressBookController {
     @PutMapping("/default")
     public R<AddressBook> setDefault(HttpServletRequest request, @RequestBody AddressBook addressBook){
         // Ensure User ID is set
-        addressBook.setUserId((Long) request.getSession().getAttribute("user"));
+        addressBook.setUserId(AuthContext.getCurrentId());
 
         addressBookService.setDefault(addressBook);
         return R.success(addressBook);
@@ -95,7 +96,7 @@ public class AddressBookController {
      */
     @GetMapping("/default")
     public R<AddressBook> getDefault(HttpServletRequest request){
-        Long userId = (Long) request.getSession().getAttribute("user");
+        Long userId = AuthContext.getCurrentId();
         AddressBook addressBook = addressBookService.getDefault(userId);
 
         if (addressBook != null) {

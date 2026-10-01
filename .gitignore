@@ -39,3 +39,6 @@ GITHUB_ACTIONS_SETUP.md
 GITHUB_ACTIONS_USAGE.md
 
 deploy/*.md
+
+# Local Design Documentation
+docs/

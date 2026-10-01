@@ -90,7 +90,7 @@ public class UserController {
      * Mobile User Login via email
      */
     @PostMapping("/login")
-    public R<User> login(HttpServletRequest request, @RequestBody Map map){
+    public R<User> login(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response, @RequestBody Map map){
         Object emailObj = map.get("email");
         Object codeObj = map.get("code");
 
@@ -126,8 +126,12 @@ public class UserController {
                 userService.save(user);
             }
 
-            // 4. Store user ID in session
-            request.getSession().setAttribute("user", user.getId());
+            // 4. Generate JWT and store in Cookie (Stateless Auth Strategy)
+            String token = com.aurodining.common.AppJwtUtil.getToken(user.getId());
+            jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("Auth-Token", token);
+            cookie.setPath("/");
+            cookie.setMaxAge(86400); // 24 hours
+            response.addCookie(cookie);
 
             // 5. Clear Redis code after successful login
             stringRedisTemplate.delete(cacheKey);
@@ -146,9 +150,13 @@ public class UserController {
      * Mobile User Logout
      */
     @PostMapping("/loginout")
-    public R<String> loginout(HttpServletRequest request) {
-        // 1. Remove user ID from session
-        request.getSession().removeAttribute("user");
+    public R<String> loginout(HttpServletRequest request, jakarta.servlet.http.HttpServletResponse response) {
+        // 1. Clear JWT Cookie
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("Auth-Token", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+        
         // 2. Clear current thread local user context
         AuthContext.removeCurrentId();
         log.info("User logged out successfully");

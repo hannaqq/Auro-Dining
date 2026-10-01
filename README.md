@@ -7,19 +7,29 @@
 ![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20SES-FF9900.svg)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)
 
-A modern, full-stack Online-to-Offline (O2O) Restaurant Management System. This project provides a complete solution for both restaurant administrators (B-end) and dining customers (C-end), featuring high-concurrency caching, stateless security, and a fully automated cloud-native CI/CD pipeline.
+A modern cloud native Restaurant Ordering and Management System. This project provides a complete solution for both restaurant administrators and dining customers, featuring high-concurrency caching, stateless security, and a fully automated cloud-native CI/CD pipeline.
+
+---
+
+## 🛠️ Tech Stack & Architecture
+
+*   **Backend Framework**: Java 17, Spring Boot 3.2, Spring Data JPA
+*   **Database & Caching**: PostgreSQL, Redis (Configured with custom Jackson serialization and cache penetration defense)
+*   **Security**: Stateless Filter chains + `ThreadLocal` context isolation
+*   **Cloud & DevOps**: AWS EC2, AWS SES, Docker, Docker-Compose, GitHub Actions
+*   **Performance Metrics**: JMeter load testing demonstrated an API latency drop from 500ms to <10ms and a 15x throughput increase (up to 3000 QPS) after cache optimization.
 
 ---
 
 ## ✨ Core Features
 
-### 👤 Customer End (C-End)
-*   **Dynamic Email Authentication**: Secure login via AWS SES (Simple Email Service) dynamic verification codes.
+### 👤 Customer Portal
+*   **Dynamic Email Authentication**: Secure login via AWS SES dynamic verification codes.
 *   **High-Performance Menu Browsing**: Millisecond-level menu and category loading powered by Redis caching.
 *   **Smart Shopping Cart**: Real-time cart state management with complex pricing aggregations.
 *   **Order Management**: Seamless order placement and historical order tracking.
 
-### 👨‍🍳 Admin End (B-End)
+### 👨‍🍳 Admin Dashboard
 *   **Employee Management**: Role-based access control and staff onboarding.
 *   **Product Lifecycle**: Comprehensive management of dishes, flavors (SKUs), and nested combo meals (Setmeals).
 *   **Automated Auditing**: All administrative actions are automatically tracked (Who & When) using Spring Data JPA Auditing.
@@ -32,14 +42,17 @@ A modern, full-stack Online-to-Offline (O2O) Restaurant Management System. This 
 ```mermaid
 flowchart TB
     subgraph Clients["Clients (Frontend)"]
-        C_End["📱 C-End (Customer)"]
-        B_End["💻 B-End (Admin)"]
+        CustomerPortal["📱 Customer Portal"]
+        AdminDashboard["💻 Admin Dashboard"]
     end
 
     subgraph Cloud["☁️ AWS Cloud Infrastructure"]
         subgraph Docker["🐳 Docker Environment (EC2)"]
-            App["🍃 Auro-Dining (Spring Boot 3.2)<br/>- JPA Auditing<br/>- ThreadLocal Auth<br/>- Jackson Config"]
-            Redis["🔴 Redis Cache<br/>- Menu/Dish Cache<br/>- Anti-Penetration"]
+            AuthFilter["🛡️ Security Filter Chain<br/>(Stateless OTP & ThreadLocal)"]
+            App["🍃 Auro-Dining Core (Spring Boot 3.2)<br/>- JPA Auditing<br/>- Jackson Config"]
+            Redis["🔴 Redis Cache<br/>- Menu/Dish Cache<br/>- Fallback Mechanism"]
+            
+            AuthFilter ==>|"Validated Request"| App
         end
         PostgreSQL["🐘 PostgreSQL<br/>- Relational Data<br/>- ACID Transactions"]
     end
@@ -47,8 +60,8 @@ flowchart TB
     SES["📧 AWS SES<br/>(Simple Email Service)"]
     Github["🐙 GitHub Actions<br/>(CI/CD Pipeline)"]
 
-    C_End -- "REST API (Menu, Cart, Orders)" --> App
-    B_End -- "REST API (Staff, Category, SKUs)" --> App
+    CustomerPortal -- "REST API (Menu, Cart, Orders)" --> AuthFilter
+    AdminDashboard -- "REST API (Staff, Category, SKUs)" --> AuthFilter
     
     App -- "Cache & Evict" --> Redis
     App -- "Read & Write (ORM)" --> PostgreSQL
@@ -57,15 +70,95 @@ flowchart TB
     Github -. "Automated Build & Deploy" .-> Docker
 ```
 
+### 🔎 Under the Hood: High-Availability Cache Workflow
+To handle peak dining hours and ensure system resilience, the caching layer implements the **Cache-Aside Pattern** with a custom **Graceful Degradation (Fallback)** mechanism.
+
+```mermaid
+flowchart TD
+    %% Read Flow (Customer)
+    Client([Customer Queries Menu]) --> Controller[Dish & Combo Controllers<br/>@Cacheable]
+    Controller --> CacheAOP{Spring Cache AOP}
+    
+    CacheAOP -- "Try Cache" --> RedisStatus{Redis Healthy?}
+    
+    %% Normal Flow
+    RedisStatus -- "Yes (Alive)" --> CacheHit{Cache Hit?}
+    CacheHit -- "Hit" --> JacksonDes[Jackson Deserialization]
+    JacksonDes --> Return([Return JSON Fast])
+    
+    CacheHit -- "Miss" --> DBQuery[Query PostgreSQL]
+    DBQuery --> JacksonSer[Jackson Serialization + 1hr TTL]
+    JacksonSer --> SaveRedis[Save to Redis]
+    SaveRedis --> Return
+    
+    %% Fallback Flow (Graceful Degradation)
+    RedisStatus -- "No (Timeout/Down)" --> ErrorHandler[Custom CacheErrorHandler]
+    ErrorHandler -- "Mute Exception (Pretend Miss)" -.-> DBQuery
+    
+    %% Cache Consistency (Admin)
+    Admin([Admin Updates Dish/Combo]) --> AdminController[Dish & Combo Controllers<br/>@CacheEvict]
+    AdminController --> UpdateDB[Update PostgreSQL]
+    UpdateDB -- "Cache Aside" --> DeleteCache[Evict Redis Cache]
+    
+    %% Styling
+    classDef fallback fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#c62828;
+    class ErrorHandler fallback;
+```
+
 ---
 
-## 🛠️ Tech Stack & Architecture
 
-*   **Backend Framework**: Java 17, Spring Boot 3.2, Spring Data JPA
-*   **Database & Caching**: PostgreSQL, Redis (Configured with custom Jackson serialization and cache penetration defense)
-*   **Security**: Stateless Filter chains + `ThreadLocal` context isolation
-*   **Cloud & DevOps**: AWS EC2, AWS SES, Docker, Docker-Compose, GitHub Actions
-*   **Performance Metrics**: JMeter load testing demonstrated an API latency drop from 500ms to <10ms and a 15x throughput increase (up to 3000 QPS) after cache optimization.
+
+### 🔐 Under the Hood: Stateless Auth & Memory Safety
+To support distributed deployments and strict memory management, the authentication flow uses a **Zero-Frontend-Modification JWT strategy** combined with isolated `ThreadLocal` context management.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client (Browser)
+    participant Filter as LoginCheckFilter
+    participant Ctrl as UserController
+    participant Redis as Redis Cache
+    participant SES as AWS SES
+    participant TL as AuthContext (ThreadLocal)
+    participant Service as Business Services
+
+    %% Phase 1: OTP Request
+    rect rgb(245, 247, 250)
+        Note over Client, SES: Phase 1: OTP Generation & Delivery
+        Client->>Ctrl: POST /user/sendMsg (Email)
+        Ctrl->>SES: Send 6-digit OTP
+        Ctrl->>Redis: SET email:OTP (TTL: 5 mins)
+        Ctrl-->>Client: 200 OK (OTP Sent)
+    end
+
+    %% Phase 2: Login & JWT
+    rect rgb(240, 248, 255)
+        Note over Client, Redis: Phase 2: Stateless Login (Zero-Frontend-Mod)
+        Client->>Ctrl: POST /user/login (Email, OTP)
+        Ctrl->>Redis: GET email:OTP & Validate
+        Ctrl->>Redis: DEL email:OTP (Prevent Replay Attack)
+        Note over Ctrl: Sign JWT (HS512)
+        Ctrl-->>Client: 200 OK (Set-Cookie: Auth-Token=JWT)
+    end
+
+    %% Phase 3: Authenticated Request
+    rect rgb(253, 245, 230)
+        Note over Client, Service: Phase 3: Auth Context & Memory Leak Prevention
+        Client->>Filter: Request Business API (Cookie: Auth-Token)
+        Filter->>Filter: Parse & Verify JWT
+        Filter->>TL: setCurrentId(userId)
+        
+        Filter->>Service: doFilter() (Proceed to Controller/Service)
+        Service->>TL: getCurrentId()
+        TL-->>Service: Return userId
+        Service-->>Filter: Return Business Response
+        
+        Note right of Filter: finally block execution
+        Filter->>TL: removeCurrentId() (Prevent Memory Leak)
+        Filter-->>Client: 200 OK Response
+    end
+```
 
 ---
 
@@ -98,7 +191,7 @@ The API will be available at `http://localhost:80`.
 
 ## ☁️ Cloud Deployment (CI/CD)
 
-This project features a **Zero-Downtime CI/CD Pipeline** built with GitHub Actions.
+This project features a ** CI/CD Pipeline** built with GitHub Actions.
 1. Push code to the `main` branch.
 2. GitHub Actions automatically compiles the Java 17 artifact.
 3. The package is securely transferred to **AWS EC2** via SCP.

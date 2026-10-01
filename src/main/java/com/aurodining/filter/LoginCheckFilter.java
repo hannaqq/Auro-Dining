@@ -74,13 +74,27 @@ public class LoginCheckFilter implements Filter {
                 return;
             }
 
-            // Check Mobile User login
-            if (request.getSession().getAttribute("user") != null) {
-                Long userId = (Long) request.getSession().getAttribute("user");
-                AuthContext.setCurrentId(userId);
-                log.info("User logged in, ID: {}", userId);
-                filterChain.doFilter(request, response);
-                return;
+            // Check Mobile User login via JWT Cookie (Stateless Auth Strategy)
+            jakarta.servlet.http.Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (jakarta.servlet.http.Cookie cookie : cookies) {
+                    if ("Auth-Token".equals(cookie.getName())) {
+                        String token = cookie.getValue();
+                        try {
+                            io.jsonwebtoken.Claims claims = com.aurodining.common.AppJwtUtil.getClaimsBody(token);
+                            if (claims != null && com.aurodining.common.AppJwtUtil.verifyToken(claims) == 0) {
+                                // Extract user ID safely, accounting for JSON deserialization to Integer/Long
+                                Long userId = ((Number) claims.get("id")).longValue();
+                                AuthContext.setCurrentId(userId);
+                                log.info("User logged in via JWT, ID: {}", userId);
+                                filterChain.doFilter(request, response);
+                                return;
+                            }
+                        } catch (Exception e) {
+                            log.warn("Invalid or expired JWT token", e);
+                        }
+                    }
+                }
             }
 
             // Handle unauthorized access
