@@ -1,4 +1,4 @@
-# 🍽️ Auro-Dining Restaurant Management System
+﻿# 馃嵔锔?Auro-Dining Restaurant Management System
 
 ![Java](https://img.shields.io/badge/Java-17-orange.svg)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.2-brightgreen.svg)
@@ -11,7 +11,7 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## 🛠️ Tech Stack & Architecture
+## 馃洜锔?Tech Stack & Architecture
 
 *   **Backend Framework**: Java 17, Spring Boot 3.2, Spring Data JPA
 *   **Database & Caching**: PostgreSQL, Redis (Configured with custom Jackson serialization and cache penetration defense)
@@ -21,15 +21,15 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## ✨ Core Features
+## 鉁?Core Features
 
-### 👤 Customer Portal
+### 馃懁 Customer Portal
 *   **Dynamic Email Authentication**: Secure login via AWS SES dynamic verification codes.
 *   **High-Performance Menu Browsing**: Millisecond-level menu and category loading powered by Redis caching.
 *   **Smart Shopping Cart**: Real-time cart state management with complex pricing aggregations.
 *   **Order Management**: Seamless order placement and historical order tracking.
 
-### 👨‍🍳 Admin Dashboard
+### 馃懆鈥嶐煃?Admin Dashboard
 *   **Employee Management**: Role-based access control and staff onboarding.
 *   **Product Lifecycle**: Comprehensive management of dishes, flavors (SKUs), and nested combo meals (Setmeals).
 *   **Automated Auditing**: All administrative actions are automatically tracked (Who & When) using Spring Data JPA Auditing.
@@ -37,7 +37,7 @@ A modern cloud native Restaurant Ordering and Management System. This project pr
 
 ---
 
-## 🏗️ System Architecture
+## 馃彈锔?System Architecture
 
 ```mermaid
 flowchart TB
@@ -48,29 +48,30 @@ flowchart TB
 
     subgraph Cloud["☁️ AWS Cloud Infrastructure"]
         subgraph Docker["🐳 Docker Environment (EC2)"]
-            AuthFilter["🛡️ Security Filter Chain<br/>(Stateless OTP & ThreadLocal)"]
-            App["🍃 Auro-Dining Core (Spring Boot 3.2)<br/>- JPA Auditing<br/>- Jackson Config"]
-            Redis["🔴 Redis Cache<br/>- Menu/Dish Cache<br/>- Fallback Mechanism"]
+            AuthFilter["🛡️ Security Filter Chain<br/>(Stateless OTP)"]
+            App["🍃 Auro-Dining Core<br/>(Spring Boot 3.2)"]
+            Redis["🔴 Redis Cache<br/>(Cache-Aside & Fallback)"]
             
             AuthFilter ==>|"Validated Request"| App
         end
-        PostgreSQL["🐘 PostgreSQL<br/>- Relational Data<br/>- ACID Transactions"]
+        
+        SES["📧 AWS SES<br/>(Email Service)"]
+        PostgreSQL["🐘 PostgreSQL<br/>(ACID Transactions)"]
     end
 
-    SES["📧 AWS SES<br/>(Simple Email Service)"]
     Github["🐙 GitHub Actions<br/>(CI/CD Pipeline)"]
 
-    CustomerPortal -- "REST API (Menu, Cart, Orders)" --> AuthFilter
-    AdminDashboard -- "REST API (Staff, Category, SKUs)" --> AuthFilter
+    CustomerPortal -- "REST API" --> AuthFilter
+    AdminDashboard -- "REST API" --> AuthFilter
     
-    App -- "Cache & Evict" --> Redis
-    App -- "Read & Write (ORM)" --> PostgreSQL
-    App -- "Trigger Auth Emails" --> SES
+    App -.->|"1. Cache & Evict"| Redis
+    App ===>|"2. Read & Write"| PostgreSQL
+    App --->|"3. Trigger Emails"| SES
     
-    Github -. "Automated Build & Deploy" .-> Docker
+    Github -. "Automated Deploy" .-> Docker
 ```
 
-### 🔎 Under the Hood: High-Availability Cache Workflow
+### 馃攷 Under the Hood: High-Availability Cache Workflow
 To handle peak dining hours and ensure system resilience, the caching layer implements the **Cache-Aside Pattern** with a custom **Graceful Degradation (Fallback)** mechanism.
 
 ```mermaid
@@ -109,7 +110,7 @@ flowchart TD
 
 
 
-### 🔐 Under the Hood: Stateless Auth & Memory Safety
+### 馃攼 Under the Hood: Stateless Auth & Memory Safety
 To support distributed deployments and strict memory management, the authentication flow uses a **Zero-Frontend-Modification JWT strategy** combined with isolated `ThreadLocal` context management.
 
 ```mermaid
@@ -162,7 +163,7 @@ sequenceDiagram
 
 ---
 
-## 🚀 Quick Start (Local Development)
+## 馃殌 Quick Start (Local Development)
 
 ### Prerequisites
 *   [Java 17+](https://adoptium.net/)
@@ -189,14 +190,15 @@ The API will be available at `http://localhost:80`.
 
 ---
 
-## ☁️ Cloud Deployment (CI/CD)
+## 鈽侊笍 Cloud Deployment (CI/CD)
 
-This project features a ** CI/CD Pipeline** built with GitHub Actions.
+This project features a fully automated **CI/CD Pipeline** leveraging GitHub Actions and AWS infrastructure:
 1. Push code to the `main` branch.
-2. GitHub Actions automatically compiles the Java 17 artifact.
-3. The package is securely transferred to **AWS EC2** via SCP.
-4. `docker-compose` rebuilds the container and performs a smooth restart.
-5. Automated health checks ensure 99.9% availability. (Includes custom 10-second rollback `.sh` scripts in the `deploy/` folder).
+2. GitHub Actions automatically compiles the Java 17 artifact and builds the Docker image.
+3. The image is deployed to an **AWS EC2** instance running as a purely stateless compute node.
+4. Data persistence is offloaded to **Amazon RDS (PostgreSQL)**, completely decoupling storage from compute for enterprise-grade durability.
+5. Spring Boot Actuator performs automated HTTP health checks (`/actuator/health`) to verify container readiness during deployment.
 
 ---
-*Developed with ❤️ and modern Java engineering practices.*
+*Developed with 鉂わ笍 and modern Java engineering practices.*
+
