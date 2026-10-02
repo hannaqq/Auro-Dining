@@ -10,6 +10,9 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.Cookie;
+import com.aurodining.common.AppJwtUtil;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,7 +29,7 @@ public class EmployeeController {
     private EmployeeService employeeService;
 
     @PostMapping("/login")
-    public R<Employee> login(HttpServletRequest request, @RequestBody Employee employee) {
+    public R<Employee> login(HttpServletRequest request, HttpServletResponse response, @RequestBody Employee employee) {
         // Encrypt password using MD5
         String password = employee.getPassword();
         password = DigestUtils.md5DigestAsHex(password.getBytes());
@@ -45,15 +48,23 @@ public class EmployeeController {
             return R.error("the account is abandoned");
         }
 
-        // Set session attribute
-        request.getSession().setAttribute("employee", emp.getId());
+        // Generate JWT and store in Cookie for stateless Admin Auth
+        String token = AppJwtUtil.getToken(emp.getId());
+        Cookie cookie = new Cookie("Admin-Token", token);
+        cookie.setPath("/");
+        cookie.setMaxAge(86400); // 24 hours
+        response.addCookie(cookie);
         return R.success(emp);
     }
 
 
     @PostMapping("/logout")
-    public R<String> logout(HttpServletRequest request) {
-        request.getSession().removeAttribute("employee");
+    public R<String> logout(HttpServletRequest request, HttpServletResponse response) {
+        // Clear Admin JWT Cookie
+        Cookie cookie = new Cookie("Admin-Token", null);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
         return R.success("sign out success");
     }
 

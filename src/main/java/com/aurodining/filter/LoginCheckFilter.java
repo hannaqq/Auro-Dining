@@ -68,19 +68,28 @@ public class LoginCheckFilter implements Filter {
 
         // ThreadLocal logic with proper cleanup
         try {
-            // Check Administration (Employee) login
-            if (request.getSession().getAttribute("employee") != null) {
-                Long empId = (Long) request.getSession().getAttribute("employee");
-                AuthContext.setCurrentId(empId);
-                log.info("Employee logged in, ID: {}", empId);
-                filterChain.doFilter(request, response);
-                return;
-            }
-
-            // Check Mobile User login via JWT Cookie (Stateless Auth Strategy)
+            // Check all tokens from Cookies (Unified Stateless Auth)
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
+                    // Check Administration (Employee) login via Admin-Token
+                    if ("Admin-Token".equals(cookie.getName())) {
+                        String token = cookie.getValue();
+                        try {
+                            Claims claims = AppJwtUtil.getClaimsBody(token);
+                            if (claims != null && AppJwtUtil.verifyToken(claims) == 0) {
+                                Long empId = ((Number) claims.get("id")).longValue();
+                                AuthContext.setCurrentId(empId);
+                                log.info("Employee logged in via JWT, ID: {}", empId);
+                                filterChain.doFilter(request, response);
+                                return;
+                            }
+                        } catch (Exception e) {
+                            log.warn("Invalid Admin JWT token", e);
+                        }
+                    }
+                    
+                    // Check Mobile User login via Auth-Token
                     if ("Auth-Token".equals(cookie.getName())) {
                         String token = cookie.getValue();
                         try {
