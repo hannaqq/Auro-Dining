@@ -1,10 +1,11 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.R;
 import com.aurodining.entity.Category;
 import com.aurodining.service.CategoryService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,10 +22,10 @@ import java.util.Map;
 @RestController
 @Slf4j
 @RequestMapping("/category")
+@RequiredArgsConstructor
 public class CategoryController {
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
     /**
      * Backend: Pagination query for category management

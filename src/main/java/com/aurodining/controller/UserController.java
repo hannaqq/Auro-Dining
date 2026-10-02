@@ -1,5 +1,7 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
 import com.aurodining.entity.User;
@@ -7,7 +9,6 @@ import com.aurodining.service.EmailService;
 import com.aurodining.service.UserService;
 import org.apache.commons.lang.RandomStringUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,17 +32,15 @@ import com.aurodining.common.AppJwtUtil;
 @RestController
 @Slf4j
 @RequestMapping("/user")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
     /** Use StringRedisTemplate so verification code is stored/read as plain string (avoids Jackson serialization mismatch). */
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    @Autowired(required = false)
-    private EmailService emailService;
+    private final EmailService emailService;
 
     // For local testing, use fixedCode and store it in Redis
     @Value("${email.fixed-code:}")

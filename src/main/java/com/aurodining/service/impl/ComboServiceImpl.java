@@ -1,5 +1,7 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.CustomException;
 import com.aurodining.dto.ComboDto;
 import com.aurodining.entity.Combo;
@@ -9,7 +11,6 @@ import com.aurodining.repository.ComboRepository;
 import com.aurodining.service.ComboService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,13 +23,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ComboServiceImpl implements ComboService {
 
-    @Autowired
-    private ComboRepository comboRepository;
+    private final ComboRepository comboRepository;
 
-    @Autowired
-    private ComboDishRepository comboDishRepository;
+    private final ComboDishRepository comboDishRepository;
 
     /**
      * Save new Combo

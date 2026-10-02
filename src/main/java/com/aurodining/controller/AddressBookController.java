@@ -1,11 +1,12 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
 import com.aurodining.entity.AddressBook;
 import com.aurodining.service.AddressBookService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,10 +19,10 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequestMapping("/addressBook")
+@RequiredArgsConstructor
 public class AddressBookController {
 
-    @Autowired
-    private AddressBookService addressBookService;
+    private final AddressBookService addressBookService;
 
     /**
      * Get all addresses for the current user

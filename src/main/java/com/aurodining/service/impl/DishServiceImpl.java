@@ -1,5 +1,7 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.dto.DishDto;
 import com.aurodining.entity.Dish;
 import com.aurodining.entity.DishFlavor;
@@ -8,7 +10,6 @@ import com.aurodining.service.DishFlavorService;
 import com.aurodining.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -21,13 +22,12 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DishServiceImpl implements DishService {
 
-    @Autowired
-    private DishRepository dishRepository;
+    private final DishRepository dishRepository;
 
-    @Autowired
-    private DishFlavorService dishFlavorService;
+    private final DishFlavorService dishFlavorService;
 
     /**
      * Save new dish and its flavors

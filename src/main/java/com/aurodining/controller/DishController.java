@@ -1,5 +1,7 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.R;
 import com.aurodining.dto.DishDto;
 import com.aurodining.entity.Category;
@@ -10,7 +12,6 @@ import com.aurodining.service.DishFlavorService;
 import com.aurodining.service.DishService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -29,16 +30,14 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @RequestMapping("/dish")
+@RequiredArgsConstructor
 public class DishController {
 
-    @Autowired
-    private DishService dishService;
+    private final DishService dishService;
 
-    @Autowired
-    private DishFlavorService dishFlavorService;
+    private final DishFlavorService dishFlavorService;
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
     /**
      * Backend: Pagination query for dish management

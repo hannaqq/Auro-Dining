@@ -1,10 +1,11 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.R;
 import com.aurodining.entity.Employee;
 import com.aurodining.service.EmployeeService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
@@ -23,10 +24,10 @@ import java.util.Map;
 @RestController
 @Slf4j
 @RequestMapping("/employee")
+@RequiredArgsConstructor
 public class EmployeeController {
 
-    @Autowired
-    private EmployeeService employeeService;
+    private final EmployeeService employeeService;
 
     @PostMapping("/login")
     public R<Employee> login(HttpServletRequest request, HttpServletResponse response, @RequestBody Employee employee) {

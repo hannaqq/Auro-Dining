@@ -1,9 +1,10 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.entity.ShoppingCart;
 import com.aurodining.repository.ShoppingCartRepository;
 import com.aurodining.service.ShoppingCartService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,10 +12,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ShoppingCartServiceImpl implements ShoppingCartService {
 
-    @Autowired
-    private ShoppingCartRepository shoppingCartRepository;
+    private final ShoppingCartRepository shoppingCartRepository;
 
     @Override
     public List<ShoppingCart> list(Long userId) {

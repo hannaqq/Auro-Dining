@@ -1,12 +1,13 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.CustomException;
 import com.aurodining.entity.Category;
 import com.aurodining.repository.CategoryRepository;
 import com.aurodining.repository.DishRepository;
 import com.aurodining.repository.ComboRepository;
 import com.aurodining.service.CategoryService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -15,16 +16,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class CategoryServiceImpl implements CategoryService {
 
-    @Autowired
-    private CategoryRepository categoryRepository;
+    private final CategoryRepository categoryRepository;
 
-    @Autowired
-    private DishRepository dishRepository;
+    private final DishRepository dishRepository;
 
-    @Autowired
-    private ComboRepository comboRepository;
+    private final ComboRepository comboRepository;
 
     @Override
     public Category save(Category category) {

@@ -1,19 +1,20 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.entity.OrderDetail;
 import com.aurodining.repository.OrderDetailRepository;
 import com.aurodining.service.OrderDetailService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OrderDetailServiceImpl implements OrderDetailService {
 
-    @Autowired
-    private OrderDetailRepository orderDetailRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     @Override
     @Transactional

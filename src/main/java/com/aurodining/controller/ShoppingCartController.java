@@ -1,11 +1,12 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
 import com.aurodining.entity.ShoppingCart;
 import com.aurodining.service.ShoppingCartService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,10 +18,10 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequestMapping("/shoppingCart")
+@RequiredArgsConstructor
 public class ShoppingCartController {
 
-    @Autowired
-    private ShoppingCartService shoppingCartService;
+    private final ShoppingCartService shoppingCartService;
 
     /**
      * Get cart list for current user

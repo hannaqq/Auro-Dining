@@ -1,5 +1,7 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.R;
 import com.aurodining.dto.ComboDto;
 import com.aurodining.entity.Category;
@@ -8,7 +10,6 @@ import com.aurodining.service.CategoryService;
 import com.aurodining.service.ComboService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -27,13 +28,12 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @RequestMapping("/combo")
+@RequiredArgsConstructor
 public class ComboController {
 
-    @Autowired
-    private ComboService comboService;
+    private final ComboService comboService;
 
-    @Autowired
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
 
     /**

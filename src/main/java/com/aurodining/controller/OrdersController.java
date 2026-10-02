@@ -1,5 +1,7 @@
 package com.aurodining.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
 import com.aurodining.dto.OrdersDto;
@@ -10,7 +12,6 @@ import com.aurodining.repository.OrdersRepository;
 import com.aurodining.service.OrdersService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -34,16 +35,14 @@ import java.util.stream.Collectors;
 @RestController
 @Slf4j
 @RequestMapping("/order")
+@RequiredArgsConstructor
 public class OrdersController {
 
-    @Autowired
-    private OrdersService orderService;
+    private final OrdersService orderService;
 
-    @Autowired
-    private OrdersRepository ordersRepository;
+    private final OrdersRepository ordersRepository;
 
-    @Autowired
-    private OrderDetailRepository orderDetailRepository;
+    private final OrderDetailRepository orderDetailRepository;
 
     /**
      * User Frontend: Get user order history with pagination

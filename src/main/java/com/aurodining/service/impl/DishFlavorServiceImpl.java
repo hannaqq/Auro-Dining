@@ -1,18 +1,19 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.entity.DishFlavor;
 import com.aurodining.repository.DishFlavorRepository;
 import com.aurodining.service.DishFlavorService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class DishFlavorServiceImpl implements DishFlavorService {
 
-    @Autowired
-    private DishFlavorRepository dishFlavorRepository;
+    private final DishFlavorRepository dishFlavorRepository;
 
     @Override
     public void saveBatch(List<DishFlavor> flavors) {

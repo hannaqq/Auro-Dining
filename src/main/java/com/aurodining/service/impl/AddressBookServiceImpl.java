@@ -1,19 +1,20 @@
 package com.aurodining.service.impl;
 
+import lombok.RequiredArgsConstructor;
+
 import com.aurodining.entity.AddressBook;
 import com.aurodining.repository.AddressBookRepository;
 import com.aurodining.service.AddressBookService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class AddressBookServiceImpl implements AddressBookService {
 
-    @Autowired
-    private AddressBookRepository addressBookRepository;
+    private final AddressBookRepository addressBookRepository;
 
     @Override
     public AddressBook save(AddressBook addressBook) {
