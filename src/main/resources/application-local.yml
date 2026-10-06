@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5433/restaurant
+    username: postgres
+    password: ${LOCAL_DB_PASSWORD:7070}
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      database: 0

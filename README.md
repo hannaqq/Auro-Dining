@@ -142,15 +142,17 @@ sequenceDiagram
 
 ### Prerequisites
 *   [Java 17+](https://adoptium.net/)
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) (for easy Redis setup)
+*   [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 *   Maven 3.8+
 
 ### 1. Start External Services (Database & Cache)
-If you have Docker installed, you can quickly spin up the required Redis instance:
+Start the project-local PostgreSQL and Redis containers:
 ```bash
-docker-compose -f deploy/docker-compose.yml up redis -d
+docker compose -f deploy/docker-compose.local.yml up -d
 ```
-*(Ensure PostgreSQL is running locally on port 5432 with a 'restaurant' database)*
+
+The local profile connects to PostgreSQL on port `5433` and Redis on port
+`6380`, so it does not conflict with services from other projects.
 
 ### 2. Configure AWS Secrets (Optional)
 For email verification to work, configure your AWS SES credentials in `application.yml` or your environment variables. 
@@ -159,7 +161,7 @@ For email verification to work, configure your AWS SES credentials in `applicati
 ### 3. Build & Run
 ```bash
 mvn clean install -DskipTests
-mvn spring-boot:run
+mvn spring-boot:run -Dspring-boot.run.profiles=local
 ```
 The API will be available at `http://localhost:80`.
 
