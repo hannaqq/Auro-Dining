@@ -13,7 +13,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Data
 @Entity
-@Table(name = "category")
 @EntityListeners(AuditingEntityListener.class)
 public class Category implements Serializable {
 

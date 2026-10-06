@@ -14,7 +14,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Data
 @Entity
-@Table(name = "combo_dish")
 @EntityListeners(AuditingEntityListener.class)
 public class ComboDish implements Serializable {
 

@@ -16,7 +16,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  */
 @Data
 @Entity
-@Table(name = "dish_flavor")
 @EntityListeners(AuditingEntityListener.class)
 public class DishFlavor implements Serializable {
     private static final long serialVersionUID = 1L;

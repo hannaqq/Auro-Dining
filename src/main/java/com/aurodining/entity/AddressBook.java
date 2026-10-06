@@ -16,7 +16,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  */
 @Data
 @Entity
-@Table(name = "address_book")
 @EntityListeners(AuditingEntityListener.class)
 public class AddressBook implements Serializable {
 
@@ -69,7 +68,4 @@ public class AddressBook implements Serializable {
     @LastModifiedBy
     private Long updateUser;
 
-    // Logic Delete Status (0: not deleted, 1: deleted)
-    // Note: JPA uses physical deletion by default, this is kept for compatibility
-    private Integer isDeleted = 0;
 }

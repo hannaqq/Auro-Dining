@@ -10,7 +10,6 @@ public class AppJwtUtil {
     // Token expiration: 24 hours (increased from 1 hr for dining app convenience)
     private static final int TOKEN_TIME_OUT = 86_400;
     private static final String TOKEN_ENCRY_KEY = "MDk4ZjZiY2Q0NjIxZDM3M2NhZGU0ZTgzMjYyN2I0ZjY";
-    private static final int REFRESH_TIME = 300;
 
     public static String getToken(Long id){
         Map<String, Object> claimMaps = new HashMap<>();
@@ -51,18 +50,20 @@ public class AppJwtUtil {
     }
 
 
+    /**
+     * Checks expiration after signature verification by getClaimsBody.
+     * Returns 0 for valid claims, 1 for missing/expired claims, and 2 for invalid claims.
+     */
     public static int verifyToken(Claims claims) {
         if(claims==null){
             return 1;
         }
         try {
-            claims.getExpiration()
-                    .before(new Date());
-            if((claims.getExpiration().getTime()-System.currentTimeMillis())>REFRESH_TIME*1000){
-                return -1;
-            }else {
-                return 0;
+            Date expiration = claims.getExpiration();
+            if (expiration == null) {
+                return 2;
             }
+            return expiration.getTime() > System.currentTimeMillis() ? 0 : 1;
         } catch (ExpiredJwtException ex) {
             return 1;
         }catch (Exception e){

@@ -17,7 +17,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
  */
 @Data
 @Entity
-@Table(name = "dish")
 @EntityListeners(AuditingEntityListener.class)
 public class Dish implements Serializable {
 
