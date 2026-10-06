@@ -27,6 +27,7 @@ public class Combo implements Serializable {
 
     private String name;
 
+    // avoid precision loss from floating-point arithmetic and ensure accurate monetary calculations
     private BigDecimal price;
 
     private Integer status;
