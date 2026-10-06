@@ -50,7 +50,7 @@ public class EmployeeController {
         }
 
         // Generate JWT and store in Cookie for stateless Admin Auth
-        String token = AppJwtUtil.getToken(emp.getId());
+        String token = AppJwtUtil.getToken(emp.getId(), AppJwtUtil.ROLE_ADMIN);
         Cookie cookie = new Cookie("Admin-Token", token);
         cookie.setPath("/");
         cookie.setMaxAge(86400); // 24 hours

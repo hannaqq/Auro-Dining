@@ -4,12 +4,12 @@ import lombok.RequiredArgsConstructor;
 
 import com.aurodining.common.AuthContext;
 import com.aurodining.common.R;
-import com.aurodining.dto.OrdersDto;
+import com.aurodining.dto.OrderDto;
 import com.aurodining.entity.OrderDetail;
-import com.aurodining.entity.Orders;
+import com.aurodining.entity.Order;
 import com.aurodining.repository.OrderDetailRepository;
-import com.aurodining.repository.OrdersRepository;
-import com.aurodining.service.OrdersService;
+import com.aurodining.repository.OrderRepository;
+import com.aurodining.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
@@ -36,11 +36,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequestMapping("/order")
 @RequiredArgsConstructor
-public class OrdersController {
+public class OrderController {
 
-    private final OrdersService orderService;
+    private final OrderService orderService;
 
-    private final OrdersRepository ordersRepository;
+    private final OrderRepository orderRepository;
 
     private final OrderDetailRepository orderDetailRepository;
 
@@ -51,10 +51,10 @@ public class OrdersController {
     public R<Map<String, Object>> getUserPage(int page, int pageSize){
         PageRequest pageRequest = PageRequest.of(page - 1, pageSize, Sort.by("orderTime").descending());
 
-        Page<Orders> ordersPage = ordersRepository.findByUserId(AuthContext.getCurrentId(), pageRequest);
+        Page<Order> ordersPage = orderRepository.findByUserId(AuthContext.getCurrentId(), pageRequest);
 
-        List<OrdersDto> dtoList = ordersPage.getContent().stream().map(order -> {
-            OrdersDto dto = new OrdersDto();
+        List<OrderDto> dtoList = ordersPage.getContent().stream().map(order -> {
+            OrderDto dto = new OrderDto();
             BeanUtils.copyProperties(order, dto);
 
             List<OrderDetail> details = orderDetailRepository.findByOrderId(order.getId());
@@ -79,7 +79,7 @@ public class OrdersController {
         PageRequest pageRequest = PageRequest.of(page - 1, pageSize, Sort.by("orderTime").descending());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-        Specification<Orders> spec = (root, query, cb) -> {
+        Specification<Order> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (number != null && !number.isEmpty()) {
                 predicates.add(cb.equal(root.get("number"), number));
@@ -93,7 +93,7 @@ public class OrdersController {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        Page<Orders> ordersPage = ordersRepository.findAll(spec, pageRequest);
+        Page<Order> ordersPage = orderRepository.findAll(spec, pageRequest);
 
         Map<String, Object> pageData = new HashMap<>();
         pageData.put("records", ordersPage.getContent());
@@ -106,7 +106,7 @@ public class OrdersController {
      * User Frontend: Submit order
      */
     @PostMapping("/submit")
-    public R<String> submit(@RequestBody Orders orders){
+    public R<String> submit(@RequestBody Order orders){
         orderService.submit(orders);
         return R.success("submit success");
     }
@@ -115,7 +115,7 @@ public class OrdersController {
      * User Frontend: Reorder (add items from previous order to cart)
      */
     @PostMapping("/again")
-    public R<String> again(@RequestBody Orders orders){
+    public R<String> again(@RequestBody Order orders){
         orderService.again(orders);
         return R.success("success");
     }
@@ -124,11 +124,11 @@ public class OrdersController {
      * Backend: Update order status
      */
     @PutMapping
-    public R<String> editStatus(@RequestBody Orders orders){
-        Orders existingOrder = ordersRepository.findById(orders.getId()).orElse(null);
+    public R<String> editStatus(@RequestBody Order orders){
+        Order existingOrder = orderRepository.findById(orders.getId()).orElse(null);
         if(existingOrder != null) {
             existingOrder.setStatus(orders.getStatus());
-            ordersRepository.save(existingOrder);
+            orderRepository.save(existingOrder);
         }
         return R.success("edit status success");
     }

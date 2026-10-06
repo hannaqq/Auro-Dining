@@ -1,23 +1,23 @@
 package com.aurodining.service;
 
-import com.aurodining.dto.OrdersDto;
-import com.aurodining.entity.Orders;
+import com.aurodining.dto.OrderDto;
+import com.aurodining.entity.Order;
 import org.springframework.data.domain.Page;
 
-public interface OrdersService {
+public interface OrderService {
 
     /**
      * Submit a new order (Transaction logic)
      */
-    void submit(Orders orders);
+    void submit(Order orders);
 
     /**
      * Re-order: add items from a past order back to shopping cart
      */
-    void again(Orders orders);
+    void again(Order orders);
 
     /**
      * Pagination for order management
      */
-    Page<OrdersDto> page(int page, int pageSize, Long userId);
+    Page<OrderDto> page(int page, int pageSize, Long userId);
 }

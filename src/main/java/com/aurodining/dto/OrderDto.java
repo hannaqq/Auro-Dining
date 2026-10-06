@@ -1,13 +1,13 @@
 package com.aurodining.dto;
 
 import com.aurodining.entity.OrderDetail;
-import com.aurodining.entity.Orders;
+import com.aurodining.entity.Order;
 import lombok.Data;
 
 import java.util.List;
 
 @Data
-public class OrdersDto extends Orders {
+public class OrderDto extends Order {
 
     private List<OrderDetail> orderDetails;
 

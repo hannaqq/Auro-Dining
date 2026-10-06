@@ -7,13 +7,20 @@ import java.util.*;
 
 public class AppJwtUtil {
 
+    public static final String ROLE_USER = "USER";
+    public static final String ROLE_ADMIN = "ADMIN";
+
     // Token expiration: 24 hours (increased from 1 hr for dining app convenience)
     private static final int TOKEN_TIME_OUT = 86_400;
     private static final String TOKEN_ENCRY_KEY = "MDk4ZjZiY2Q0NjIxZDM3M2NhZGU0ZTgzMjYyN2I0ZjY";
 
-    public static String getToken(Long id){
+    public static String getToken(Long id, String role){
+        if (!ROLE_USER.equals(role) && !ROLE_ADMIN.equals(role)) {
+            throw new IllegalArgumentException("Unsupported role: " + role);
+        }
         Map<String, Object> claimMaps = new HashMap<>();
         claimMaps.put("id",id);
+        claimMaps.put("role", role);
         long currentTime = System.currentTimeMillis();
         return Jwts.builder()
                 .setId(UUID.randomUUID().toString())
@@ -80,7 +87,7 @@ public class AppJwtUtil {
     public static void main(String[] args) {
        /* Map map = new HashMap();
         map.put("id","11");*/
-        System.out.println(AppJwtUtil.getToken(1102L));
+        System.out.println(AppJwtUtil.getToken(1102L, ROLE_USER));
         Jws<Claims> jws = AppJwtUtil.getJws("eyJhbGciOiJIUzUxMiIsInppcCI6IkdaSVAifQ.H4sIAAAAAAAAADWLQQqEMAwA_5KzhURNt_qb1KZYQSi0wi6Lf9942NsMw3zh6AVW2DYmDGl2WabkZgreCaM6VXzhFBfJMcMARTqsxIG9Z888QLui3e3Tup5Pb81013KKmVzJTGo11nf9n8v4nMUaEY73DzTabjmDAAAA.4SuqQ42IGqCgBai6qd4RaVpVxTlZIWC826QA9kLvt9d-yVUw82gU47HDaSfOzgAcloZedYNNpUcd18Ne8vvjQA");
         Claims claims = jws.getBody();
         System.out.println(claims.get("id"));

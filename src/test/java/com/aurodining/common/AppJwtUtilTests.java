@@ -11,9 +11,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class AppJwtUtilTests {
     @Test
     void newlyIssuedTokenIsAccepted() {
-        Claims claims = AppJwtUtil.getClaimsBody(AppJwtUtil.getToken(42L));
+        Claims claims = AppJwtUtil.getClaimsBody(
+                AppJwtUtil.getToken(42L, AppJwtUtil.ROLE_USER));
         assertNotNull(claims);
         assertEquals(42L, ((Number) claims.get("id")).longValue());
+        assertEquals(AppJwtUtil.ROLE_USER, claims.get("role", String.class));
         assertEquals(0, AppJwtUtil.verifyToken(claims));
     }
 

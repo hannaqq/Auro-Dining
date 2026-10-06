@@ -14,8 +14,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Data
 @Entity
+@Table(name = "orders")
 @EntityListeners(AuditingEntityListener.class)
-public class Orders implements Serializable {
+public class Order implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

@@ -129,7 +129,7 @@ public class UserController {
             }
 
             // 4. Generate JWT and store in Cookie
-            String token = AppJwtUtil.getToken(user.getId());
+            String token = AppJwtUtil.getToken(user.getId(), AppJwtUtil.ROLE_USER);
             Cookie cookie = new Cookie("Auth-Token", token);
             cookie.setPath("/");
             cookie.setMaxAge(86400); // 24 hours

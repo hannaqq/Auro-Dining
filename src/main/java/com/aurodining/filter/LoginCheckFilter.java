@@ -16,24 +16,26 @@ import io.jsonwebtoken.Claims;
 import com.aurodining.common.AppJwtUtil;
 
 /**
- * Filter to check login status and manage ThreadLocal context
- * Architecture Note: A Filter is used here instead of a Spring Interceptor because
- * this project bundles static resources. The Filter operates at the outermost layer
- * to block unauthorized direct access to HTML pages.
+ * Checks JWT authentication and manages request-scoped ThreadLocal context.
+ * A Servlet Filter provides a shared authentication entry point before Spring MVC
+ * dispatches requests, without depending on a specific MVC handler. It applies
+ * the allowlist and handles unauthenticated page and API requests consistently.
+ * Spring MVC interceptors can also intercept static resources served by Spring MVC;
+ * serving static resources does not itself require a Filter.
  */
 @WebFilter(urlPatterns = "/*")
 @Slf4j
 public class LoginCheckFilter implements Filter {
 
-    public static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
 
-        String requestURI = request.getRequestURI();
-        log.info("Intercepted request: {}", requestURI);
+        String requestPath = request.getServletPath();
+        log.info("Intercepted request: {}", requestPath);
 
         // Define white list
         String[] urls = new String[]{
@@ -59,65 +61,123 @@ public class LoginCheckFilter implements Filter {
         };
 
         // Check if the path needs to be handled
-        boolean check = check(urls, requestURI);
+        boolean check = check(urls, requestPath);
         if (check) {
-            log.info("Path {} is in white list, passing...", requestURI);
+            log.info("Path {} is in white list, passing...", requestPath);
             filterChain.doFilter(request, response);
             return;
         }
 
         // ThreadLocal logic with proper cleanup
         try {
-            // Check all tokens from Cookies (Unified Stateless Auth)
+            boolean adminRequest = isAdminRequest(request);
+            boolean authenticatedButForbidden = false;
+
+            // Check all recognized JWT cookies. The signed role claim, rather than
+            // the cookie name, determines whether the caller is a user or admin.
             Cookie[] cookies = request.getCookies();
             if (cookies != null) {
                 for (Cookie cookie : cookies) {
-                    // Check Administration (Employee) login via Admin-Token
-                    if ("Admin-Token".equals(cookie.getName())) {
-                        String token = cookie.getValue();
-                        try {
-                            Claims claims = AppJwtUtil.getClaimsBody(token);
-                            if (claims != null && AppJwtUtil.verifyToken(claims) == 0) {
-                                Long empId = ((Number) claims.get("id")).longValue();
-                                AuthContext.setCurrentId(empId);
-                                log.info("Employee logged in via JWT, ID: {}", empId);
-                                filterChain.doFilter(request, response);
-                                return;
-                            }
-                        } catch (Exception e) {
-                            log.warn("Invalid Admin JWT token", e);
-                        }
+                    if (!"Admin-Token".equals(cookie.getName())
+                            && !"Auth-Token".equals(cookie.getName())) {
+                        continue;
                     }
-                    
-                    // Check Mobile User login via Auth-Token
-                    if ("Auth-Token".equals(cookie.getName())) {
-                        String token = cookie.getValue();
-                        try {
-                            Claims claims = AppJwtUtil.getClaimsBody(token);
-                            if (claims != null && AppJwtUtil.verifyToken(claims) == 0) {
-                                // Extract user ID safely, accounting for JSON deserialization to Integer/Long
-                                Long userId = ((Number) claims.get("id")).longValue();
-                                AuthContext.setCurrentId(userId);
-                                log.info("User logged in via JWT, ID: {}", userId);
-                                filterChain.doFilter(request, response);
-                                return;
-                            }
-                        } catch (Exception e) {
-                            log.warn("Invalid or expired JWT token", e);
+
+                    try {
+                        Claims claims = AppJwtUtil.getClaimsBody(cookie.getValue());
+                        if (claims == null || AppJwtUtil.verifyToken(claims) != 0) {
+                            continue;
                         }
+
+                        String role = claims.get("role", String.class);
+                        if (!AppJwtUtil.ROLE_USER.equals(role)
+                                && !AppJwtUtil.ROLE_ADMIN.equals(role)) {
+                            continue;
+                        }
+
+                        if (adminRequest && !AppJwtUtil.ROLE_ADMIN.equals(role)) {
+                            authenticatedButForbidden = true;
+                            continue;
+                        }
+
+                        Long id = ((Number) claims.get("id")).longValue();
+                        AuthContext.setCurrentId(id);
+                        log.info("Authenticated request via JWT, role={}, id={}", role, id);
+                        filterChain.doFilter(request, response);
+                        return;
+                    } catch (Exception e) {
+                        log.warn("Invalid or expired JWT token", e);
                     }
                 }
             }
 
+            if (authenticatedButForbidden) {
+                log.warn("Forbidden request to admin resource: {}", requestPath);
+                handleForbidden(request, response, requestPath);
+                return;
+            }
+
             // Handle unauthorized access
-            log.info("Unauthorized access to: {}", requestURI);
-            handleUnauthorized(request, response, requestURI);
+            log.info("Unauthorized access to: {}", requestPath);
+            handleUnauthorized(request, response, requestPath);
 
         } finally {
             // Cleanup threadLocal to prevent data contamination and memory leaks
             AuthContext.removeCurrentId();
-            log.debug("ThreadLocal context cleared for URI: {}", requestURI);
+            log.debug("ThreadLocal context cleared for URI: {}", requestPath);
         }
+    }
+
+    private boolean isAdminRequest(HttpServletRequest request) {
+        String method = request.getMethod();
+        String uri = request.getServletPath();
+
+        if (uri.startsWith("/backend/")) {
+            return true;
+        }
+
+        if (uri.equals("/employee") || uri.startsWith("/employee/")) {
+            return true;
+        }
+
+        if (uri.startsWith("/category")) {
+            return !("GET".equals(method) && "/category/list".equals(uri));
+        }
+
+        if (uri.startsWith("/dish")) {
+            return !("GET".equals(method) && "/dish/list".equals(uri));
+        }
+
+        if (uri.startsWith("/combo")) {
+            boolean userEndpoint = "GET".equals(method)
+                    && ("/combo/list".equals(uri)
+                    || PATH_MATCHER.match("/combo/dish/{id}", uri));
+            return !userEndpoint;
+        }
+
+        if ("GET".equals(method) && "/order/page".equals(uri)) {
+            return true;
+        }
+
+        if ("PUT".equals(method) && "/order".equals(uri)) {
+            return true;
+        }
+
+        return "POST".equals(method) && "/common/upload".equals(uri);
+    }
+
+    private void handleForbidden(HttpServletRequest request, HttpServletResponse response, String uri) throws IOException {
+        String xRequestedWith = request.getHeader("X-Requested-With");
+        boolean isAjax = "XMLHttpRequest".equals(xRequestedWith);
+
+        if (uri.endsWith(".html") && !isAjax) {
+            response.sendRedirect("/backend/page/login/login.html");
+            return;
+        }
+
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+        response.setContentType("application/json;charset=utf-8");
+        response.getWriter().write(JSON.toJSONString(R.error("FORBIDDEN")));
     }
 
     private void handleUnauthorized(HttpServletRequest request, HttpServletResponse response, String uri) throws IOException {
