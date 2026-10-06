@@ -15,6 +15,7 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     # Define global environment variables for the job
     env:
       EC2_HOST: ${{ secrets.EC2_HOST }}
@@ -25,21 +26,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'corretto'
           cache: maven
 
-      - name: Run security and controller tests
-        run: mvn -Dtest=AppJwtUtilTests,LoginCheckFilterTests,ControllerSeparationTests test
-
-      - name: Build with Maven
-        # The full context test requires PostgreSQL; focused tests run above without external services.
-        run: mvn clean package -DskipTests
+      - name: Verify unit and integration tests
+        # Testcontainers starts temporary PostgreSQL and Redis instances on the runner.
+        run: mvn -B clean verify -Pintegration
 
       - name: Prepare deployment package
         # Grouping all necessary files for the EC2 environment

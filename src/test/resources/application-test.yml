@@ -1,0 +1,25 @@
+server:
+  port: 0
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        globally_quoted_identifiers: true
+  cache:
+    type: redis
+    redis:
+      time-to-live: 5m
+      cache-null-values: false
+
+auro-dining:
+  path: ${java.io.tmpdir}/auro-dining-test-images/
+
+email:
+  provider: log
+  fixed-code: 1234
+  from: test@example.com
