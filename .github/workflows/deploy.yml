@@ -34,8 +34,11 @@ jobs:
           distribution: 'corretto'
           cache: maven
 
+      - name: Run security and controller tests
+        run: mvn -Dtest=AppJwtUtilTests,LoginCheckFilterTests,ControllerSeparationTests test
+
       - name: Build with Maven
-        # Skipping tests to speed up the deployment process
+        # The full context test requires PostgreSQL; focused tests run above without external services.
         run: mvn clean package -DskipTests
 
       - name: Prepare deployment package
@@ -108,7 +111,7 @@ jobs:
 #           INTERVAL=10
 #           for i in $(seq 1 $MAX_ATTEMPTS); do
 #             echo "Health check attempt $i/$MAX_ATTEMPTS..."
-#             if curl -sf --connect-timeout 5 "http://$EC2_HOST/" > /dev/null; then
+#             if curl -sf --connect-timeout 5 "http://$EC2_HOST/health" > /dev/null; then
 #               echo "Health check passed: site is reachable."
 #               exit 0
 #             fi
@@ -117,5 +120,5 @@ jobs:
 #               sleep $INTERVAL
 #             fi
 #           done
-#           echo "ERROR: Health check failed after $MAX_ATTEMPTS attempts. Site at http://$EC2_HOST/ is not reachable."
+#           echo "ERROR: Health check failed after $MAX_ATTEMPTS attempts. Site at http://$EC2_HOST/health is not reachable."
 #           exit 1

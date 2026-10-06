@@ -17,7 +17,6 @@ spring:
         format_sql: true
         globally_quoted_identifiers: true
   data:
-    data:
     redis:
       host: localhost
       port: 6379
@@ -30,8 +29,9 @@ spring:
           min-idle: 0
           max-wait: -1ms
   cache:
+    type: redis
     redis:
-      time-to-live: 1800000ms
+      time-to-live: 30m
       cache-null-values: false
 
 auro-dining:

@@ -1,9 +1,6 @@
 package com.aurodining.service.impl;
 
-import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService;
-import com.amazonaws.services.simpleemail.AmazonSimpleEmailServiceClientBuilder;
 import com.amazonaws.services.simpleemail.model.*;
 import com.aurodining.service.EmailService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,39 +18,20 @@ import org.springframework.stereotype.Service;
  * - Set AWS region (default: us-east-1)
  * - Verify sender email address in AWS SES console
  * 
- * Free Tier: 62,000 emails/month when sending from EC2
  */
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "email.provider", havingValue = "ses")
 public class AwsSesEmailServiceImpl implements EmailService {
 
-    @Value("${aws.region:us-east-1}")
-    private String awsRegion;
+    private final AmazonSimpleEmailService sesClient;
+    private final String fromEmail;
 
-    @Value("${email.from:noreply@aurodining.com}")
-    private String fromEmail;
-
-    private AmazonSimpleEmailService sesClient;
-
-    public AwsSesEmailServiceImpl() {
-        // Initialize SES client lazily
-    }
-
-    private AmazonSimpleEmailService getSesClient() {
-        if (sesClient == null) {
-            try {
-                sesClient = AmazonSimpleEmailServiceClientBuilder.standard()
-                        .withCredentials(DefaultAWSCredentialsProviderChain.getInstance())
-                        .withRegion(Regions.fromName(awsRegion))
-                        .build();
-                log.info("AWS SES client initialized for region: {}", awsRegion);
-            } catch (Exception e) {
-                log.error("Failed to initialize AWS SES client", e);
-                throw new RuntimeException("AWS SES initialization failed", e);
-            }
-        }
-        return sesClient;
+    public AwsSesEmailServiceImpl(
+            AmazonSimpleEmailService sesClient,
+            @Value("${email.from:noreply@aurodining.com}") String fromEmail) {
+        this.sesClient = sesClient;
+        this.fromEmail = fromEmail;
     }
 
     @Override
@@ -67,27 +45,36 @@ public class AwsSesEmailServiceImpl implements EmailService {
 
             // Create email content
             String subject = "Your Auro Dining Verification Code";
-            String htmlBody = String.format(
-                "<html><body>" +
-                "<h2>Auro Dining Verification Code</h2>" +
-                "<p>Your verification code is: <strong style='font-size: 24px; color: #ffc200;'>%s</strong></p>" +
-                "<p>This code is valid for 5 minutes.</p>" +
-                "<p>If you didn't request this code, please ignore this email.</p>" +
-                "<hr>" +
-                "<p style='color: #666; font-size: 12px;'>Auro Dining - Restaurant Management System</p>" +
-                "</body></html>",
-                code
-            );
-            
-            String textBody = String.format(
-                "Auro Dining Verification Code\n\n" +
-                "Your verification code is: %s\n\n" +
-                "This code is valid for 5 minutes.\n\n" +
-                "If you didn't request this code, please ignore this email.\n\n" +
-                "---\n" +
-                "Auro Dining - Restaurant Management System",
-                code
-            );
+            String htmlBody = """
+                    <html>
+                      <body>
+                        <h2>Auro Dining Verification Code</h2>
+                        <p>
+                          Your verification code is:
+                          <strong style="font-size: 24px; color: #ffc200;">%s</strong>
+                        </p>
+                        <p>This code is valid for 5 minutes.</p>
+                        <p>If you didn't request this code, please ignore this email.</p>
+                        <hr>
+                        <p style="color: #666; font-size: 12px;">
+                          Auro Dining - Restaurant Management System
+                        </p>
+                      </body>
+                    </html>
+                    """.formatted(code);
+
+            String textBody = """
+                    Auro Dining Verification Code
+
+                    Your verification code is: %s
+
+                    This code is valid for 5 minutes.
+
+                    If you didn't request this code, please ignore this email.
+
+                    ---
+                    Auro Dining - Restaurant Management System
+                    """.formatted(code);
 
             // Create send request
             SendEmailRequest request = new SendEmailRequest()
@@ -100,7 +87,7 @@ public class AwsSesEmailServiceImpl implements EmailService {
                     .withSource(fromEmail);
 
             // Send email
-            SendEmailResult result = getSesClient().sendEmail(request);
+            SendEmailResult result = sesClient.sendEmail(request);
             log.info("Email sent successfully. Email: {}, MessageId: {}", email, result.getMessageId());
             return true;
 

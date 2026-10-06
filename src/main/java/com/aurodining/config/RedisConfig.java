@@ -1,13 +1,11 @@
 package com.aurodining.config;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.aurodining.common.JacksonObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CachingConfigurer;
@@ -17,10 +15,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
 
@@ -28,34 +24,10 @@ import java.time.Duration;
 @Configuration
 public class RedisConfig implements CachingConfigurer {
 
-
-
     @Bean
-    public RedisTemplate<Object, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<Object, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-
-        // Use Jackson2JsonRedisSerializer to serialize and deserialize Redis values
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        // Register JavaTimeModule to support LocalDateTime serialization/deserialization
-        mapper.registerModule(new JavaTimeModule());
-        mapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
-
-        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(mapper, Object.class);
-
-        // Set serialization rules for keys and values
-        redisTemplate.setValueSerializer(serializer);
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-        redisTemplate.setHashValueSerializer(serializer);
-
-        redisTemplate.afterPropertiesSet();
-        return redisTemplate;
-    }
-
-    @Bean
-    public CacheManager cacheManager(RedisConnectionFactory factory) {
+    public CacheManager cacheManager(
+            RedisConnectionFactory factory,
+            @Value("${spring.cache.redis.time-to-live:30m}") Duration timeToLive) {
         // Use custom ObjectMapper to handle LocalDateTime and Long precision
         ObjectMapper mapper = new JacksonObjectMapper();
 
@@ -70,7 +42,7 @@ public class RedisConfig implements CachingConfigurer {
 
         // Setup Cache Configuration
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(Duration.ofHours(1)) // Cache expires in 1 hour
+                .entryTtl(timeToLive)
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .disableCachingNullValues();
 

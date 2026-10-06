@@ -1,6 +1,6 @@
 const getOrderDetailPage = (params) => {
   return $axios({
-    url: '/order/page',
+    url: '/admin/order/page',
     method: 'get',
     params
   })
@@ -8,14 +8,14 @@ const getOrderDetailPage = (params) => {
 
 const queryOrderDetailById = (id) => {
   return $axios({
-    url: `/orderDetail/${id}`,
+    url: `/admin/orderDetail/${id}`,
     method: 'get'
   })
 }
 
 const editOrderDetail = (params) => {
   return $axios({
-    url: '/order',
+    url: '/admin/order',
     method: 'put',
     data: { ...params }
   })

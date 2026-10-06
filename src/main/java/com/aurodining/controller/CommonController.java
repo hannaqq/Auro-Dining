@@ -4,18 +4,15 @@ import com.aurodining.common.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.UUID;
 
 /**
- * Common Controller for Both Backend Management and User Frontend
- * Handles file upload and download operations used by both admin and user interfaces
+ * Public file download endpoint.
  */
 @RestController
 @RequestMapping("/common")
@@ -24,29 +21,6 @@ public class CommonController {
 
     @Value("${auro-dining.path}")
     private String basePath;
-
-    /**
-     * File Upload
-     * @param file MultipartFile from frontend
-     * @return R<String> containing the generated filename
-     */
-    @PostMapping("/upload")
-    public R<String> upload(MultipartFile file) throws IOException {
-        log.info("Uploading file to Pictures folder...");
-
-        String originalFilename = file.getOriginalFilename();
-        String suffix = originalFilename.substring(originalFilename.lastIndexOf("."));
-        String fileName = UUID.randomUUID().toString() + suffix;
-
-        File dir = new File(basePath);
-        if(!dir.exists()){
-            dir.mkdirs();
-        }
-
-        file.transferTo(new File(dir, fileName));
-
-        return R.success(fileName);
-    }
 
     @GetMapping("/download")
     public void download(String name, HttpServletResponse response) throws IOException {

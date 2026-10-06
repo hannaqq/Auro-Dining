@@ -1,6 +1,6 @@
 const getDishPage = (params) => {
   return $axios({
-    url: '/dish/page',
+    url: '/admin/dish/page',
     method: 'get',
     params
   })
@@ -8,7 +8,7 @@ const getDishPage = (params) => {
 
 const deleteDish = (ids) => {
   return $axios({
-    url: '/dish',
+    url: '/admin/dish',
     method: 'delete',
     params: { ids }
   })
@@ -16,7 +16,7 @@ const deleteDish = (ids) => {
 
 const editDish = (params) => {
   return $axios({
-    url: '/dish',
+    url: '/admin/dish',
     method: 'put',
     data: { ...params }
   })
@@ -24,7 +24,7 @@ const editDish = (params) => {
 
 const addDish = (params) => {
   return $axios({
-    url: '/dish',
+    url: '/admin/dish',
     method: 'post',
     data: { ...params }
   })
@@ -32,7 +32,7 @@ const addDish = (params) => {
 
 const queryDishById = (id) => {
   return $axios({
-    url: `/dish/${id}`,
+    url: `/admin/dish/${id}`,
     method: 'get'
   })
 }
@@ -66,7 +66,7 @@ const commonDownload = (params) => {
 
 const dishStatusByStatus = (params) => {
   return $axios({
-    url: `/dish/status/${params.status}`,
+    url: `/admin/dish/status/${params.status}`,
     method: 'post',
     params: { ids: params.id }
   })

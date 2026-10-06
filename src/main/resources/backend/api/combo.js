@@ -1,6 +1,6 @@
 const getComboPage = (params) => {
   return $axios({
-    url: '/combo/page',
+    url: '/admin/combo/page',
     method: 'get',
     params
   })
@@ -8,7 +8,7 @@ const getComboPage = (params) => {
 
 const deleteCombo = (ids) => {
   return $axios({
-    url: '/combo',
+    url: '/admin/combo',
     method: 'delete',
     params: { ids }
   })
@@ -16,7 +16,7 @@ const deleteCombo = (ids) => {
 
 const editCombo = (params) => {
   return $axios({
-    url: '/combo',
+    url: '/admin/combo',
     method: 'put',
     data: { ...params }
   })
@@ -24,7 +24,7 @@ const editCombo = (params) => {
 
 const addCombo = (params) => {
   return $axios({
-    url: '/combo',
+    url: '/admin/combo',
     method: 'post',
     data: { ...params }
   })
@@ -32,14 +32,14 @@ const addCombo = (params) => {
 
 const queryComboById = (id) => {
   return $axios({
-    url: `/combo/${id}`,
+    url: `/admin/combo/${id}`,
     method: 'get'
   })
 }
 
 const comboStatusByStatus = (params) => {
   return $axios({
-    url: `/combo/status/${params.status}`,
+    url: `/admin/combo/status/${params.status}`,
     method: 'post',
     params: { ids: params.ids }
   })

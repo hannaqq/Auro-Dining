@@ -1,6 +1,6 @@
 function getMemberList (params) {
   return $axios({
-    url: '/employee/page',
+    url: '/admin/employee/page',
     method: 'get',
     params
   })
@@ -8,7 +8,7 @@ function getMemberList (params) {
 
 function enableOrDisableEmployee (params) {
   return $axios({
-    url: '/employee',
+    url: '/admin/employee',
     method: 'put',
     data: { ...params }
   })
@@ -16,7 +16,7 @@ function enableOrDisableEmployee (params) {
 
 function addEmployee (params) {
   return $axios({
-    url: '/employee',
+    url: '/admin/employee',
     method: 'post',
     data: { ...params }
   })
@@ -24,7 +24,7 @@ function addEmployee (params) {
 
 function editEmployee (params) {
   return $axios({
-    url: '/employee',
+    url: '/admin/employee',
     method: 'put',
     data: { ...params }
   })
@@ -32,7 +32,7 @@ function editEmployee (params) {
 
 function queryEmployeeById (id) {
   return $axios({
-    url: `/employee/${id}`,
+    url: `/admin/employee/${id}`,
     method: 'get'
   })
 }

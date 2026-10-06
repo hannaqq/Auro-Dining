@@ -6,13 +6,6 @@ function  addOrderApi(data){
       })
 }
 
-function orderListApi() {
-  return $axios({
-    'url': '/order/list',
-    'method': 'get',
-  })
-}
-
 function orderPagingApi(data) {
   return $axios({
       'url': '/order/userPage',
