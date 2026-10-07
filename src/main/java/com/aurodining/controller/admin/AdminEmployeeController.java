@@ -1,7 +1,7 @@
 package com.aurodining.controller.admin;
 
-import com.aurodining.common.AppJwtUtil;
 import com.aurodining.common.R;
+import com.aurodining.dto.LoginResult;
 import com.aurodining.entity.Employee;
 import com.aurodining.service.EmployeeService;
 import jakarta.servlet.http.Cookie;
@@ -22,16 +22,13 @@ public class AdminEmployeeController {
 
     @PostMapping("/login")
     public R<Employee> login(HttpServletResponse response, @RequestBody Employee employee) {
-        String password = DigestUtils.md5DigestAsHex(employee.getPassword().getBytes());
-        Employee existing = employeeService.getByUsername(employee.getUsername());
-        if (existing == null) return R.error("username doesn't exist");
-        if (!existing.getPassword().equals(password)) return R.error("password is wrong");
-        if (existing.getStatus() == 0) return R.error("the account is abandoned");
-        Cookie cookie = new Cookie("Admin-Token", AppJwtUtil.getToken(existing.getId(), AppJwtUtil.ROLE_ADMIN));
+        LoginResult<Employee> result =
+                employeeService.login(employee.getUsername(), employee.getPassword());
+        Cookie cookie = new Cookie("Admin-Token", result.token());
         cookie.setPath("/");
         cookie.setMaxAge(86400);
         response.addCookie(cookie);
-        return R.success(existing);
+        return R.success(result.principal());
     }
 
     @PostMapping("/logout")

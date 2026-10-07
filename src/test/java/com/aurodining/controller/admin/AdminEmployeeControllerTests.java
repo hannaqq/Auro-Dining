@@ -1,5 +1,8 @@
 package com.aurodining.controller.admin;
 
+import com.aurodining.common.CustomException;
+import com.aurodining.common.GlobalExceptionHandler;
+import com.aurodining.dto.LoginResult;
 import com.aurodining.entity.Employee;
 import com.aurodining.service.EmployeeService;
 import jakarta.servlet.http.Cookie;
@@ -15,7 +18,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.util.DigestUtils;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -32,34 +34,34 @@ class AdminEmployeeControllerTests {
     void setUp() {
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new AdminEmployeeController(employeeService))
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
 
     @Test
-    void loginRejectsUnknownWrongPasswordAndDisabledAccounts() throws Exception {
-        when(employeeService.getByUsername("admin")).thenReturn(null);
-        performLogin().andExpect(jsonPath("$.msg").value("username doesn't exist"));
+    void loginDelegatesToServiceAndMapsBusinessError() throws Exception {
+        when(employeeService.login("admin", "wrong"))
+                .thenThrow(new CustomException("password is wrong"));
 
-        Employee existing = employee("different", 1);
-        when(employeeService.getByUsername("admin")).thenReturn(existing);
-        performLogin().andExpect(jsonPath("$.msg").value("password is wrong"));
-
-        existing.setPassword(md5("secret"));
-        existing.setStatus(0);
-        performLogin().andExpect(jsonPath("$.msg").value("the account is abandoned"));
+        performLogin("wrong")
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.msg").value("password is wrong"));
     }
 
     @Test
     void successfulLoginAndLogoutManageAdminCookie() throws Exception {
-        Employee existing = employee(md5("secret"), 1);
-        existing.setId(3L);
-        when(employeeService.getByUsername("admin")).thenReturn(existing);
+        Employee employee = new Employee();
+        employee.setId(3L);
+        employee.setUsername("admin");
+        when(employeeService.login("admin", "secret"))
+                .thenReturn(new LoginResult<>(employee, "admin-jwt"));
 
-        MvcResult login = performLogin()
+        MvcResult login = performLogin("secret")
                 .andExpect(jsonPath("$.code").value(1))
                 .andReturn();
         Cookie loginCookie = login.getResponse().getCookie("Admin-Token");
         assertNotNull(loginCookie);
+        assertEquals("admin-jwt", loginCookie.getValue());
         assertEquals("/", loginCookie.getPath());
         assertEquals(86400, loginCookie.getMaxAge());
 
@@ -83,18 +85,11 @@ class AdminEmployeeControllerTests {
         assertEquals(md5("123456"), captor.getValue().getPassword());
     }
 
-    private org.springframework.test.web.servlet.ResultActions performLogin() throws Exception {
+    private org.springframework.test.web.servlet.ResultActions performLogin(String password)
+            throws Exception {
         return mockMvc.perform(post("/admin/employee/login")
                 .contentType("application/json")
-                .content("{\"username\":\"admin\",\"password\":\"secret\"}"));
-    }
-
-    private Employee employee(String password, int status) {
-        Employee employee = new Employee();
-        employee.setUsername("admin");
-        employee.setPassword(password);
-        employee.setStatus(status);
-        return employee;
+                .content("{\"username\":\"admin\",\"password\":\"" + password + "\"}"));
     }
 
     private String md5(String value) {

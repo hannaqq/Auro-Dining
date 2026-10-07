@@ -26,7 +26,7 @@ public class AppJwtUtil {
                 .setId(UUID.randomUUID().toString())
                 .setIssuedAt(new Date(currentTime))
                 .setSubject("system")
-                .setIssuer("news")
+                .setIssuer("aurodining")
                 .setAudience("app")
                 .compressWith(CompressionCodecs.GZIP)
                 .signWith(SignatureAlgorithm.HS512, generalKey())

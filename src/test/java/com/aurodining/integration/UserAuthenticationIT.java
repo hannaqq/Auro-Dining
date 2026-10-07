@@ -75,4 +75,34 @@ class UserAuthenticationIT extends IntegrationTestContainers {
                 .andExpect(jsonPath("$.code").value(1))
                 .andExpect(jsonPath("$.data").isArray());
     }
+
+    @Test
+    void disabledUserCannotLoginAndVerificationCodeIsNotConsumed() throws Exception {
+        User disabled = new User();
+        disabled.setEmail(EMAIL);
+        disabled.setStatus(0);
+        userRepository.save(disabled);
+
+        mockMvc.perform(post("/user/sendMsg")
+                        .servletPath("/user/sendMsg")
+                        .contentType("application/json")
+                        .content("{\"email\":\"" + EMAIL + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(1));
+
+        MvcResult login = mockMvc.perform(post("/user/login")
+                        .servletPath("/user/login")
+                        .contentType("application/json")
+                        .content("{\"email\":\"" + EMAIL + "\",\"code\":\"1234\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.msg").value("Login failed: Account is disabled"))
+                .andReturn();
+
+        assertNull(login.getResponse().getCookie("Auth-Token"));
+        assertEquals("1234", redisTemplate.opsForValue().get(REDIS_KEY));
+        assertEquals(1, userRepository.findAll().stream()
+                .filter(user -> EMAIL.equals(user.getEmail()))
+                .count());
+    }
 }
